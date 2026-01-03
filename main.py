@@ -3,9 +3,13 @@
 Script principal para edição de metadados EPUB e marcação de plataformas.
 
 Uso:
-    python main.py <caminho_mhtml> <caminho_epub_zip>
+    python main.py [<caminho_mhtml> <caminho_epub_zip>]
+
+Se os caminhos não forem fornecidos, o script procurará automaticamente 
+por arquivos .mhtml e .epub dentro da pasta 'input/'.
 
 Exemplo:
+    python main.py 
     python main.py "arquivo.mhtml" "9786558823230.epub"
 """
 

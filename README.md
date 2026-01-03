@@ -46,7 +46,13 @@ Este projeto é uma ferramenta de automação para edição de metadados de arqu
 
 ## 💻 Como Usar
 
-Para executar o processo completo, utilize o script `main.py` passando o arquivo MHTML de origem e o arquivo EPUB alvo:
+Para executar o processo completo, você pode simplesmente colocar os arquivos na pasta `input/` e rodar:
+
+```bash
+python main.py
+```
+
+Ou, se preferir especificar caminhos customizados:
 
 ```bash
 python main.py "caminho/para/arquivo.mhtml" "caminho/para/livro.epub"
