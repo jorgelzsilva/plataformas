@@ -62,22 +62,76 @@ def update_opf_metadata(opf_path: str, metadata: Dict[str, str]) -> None:
         isbn_value = metadata.get('isbn')
         if isbn_value:
             isbn_elem = None
-            # Tenta encontrar dc:identifier com opf:scheme="ISBN"
+            found_by_scheme = False
+            
+            # Formata o ISBN corretamente: urn:isbn:978...
+            # Se já vier com urn:isbn:, mantém. Caso contrário, adiciona prefixo.
+            if isbn_value.lower().startswith("urn:isbn:"):
+                formatted_isbn = isbn_value
+                raw_isbn = isbn_value.split(":")[-1]
+            else:
+                formatted_isbn = f"urn:isbn:{isbn_value}"
+                raw_isbn = isbn_value
+                
+            # Tenta encontrar dc:identifier existente
+            # 1. Por scheme="ISBN"
             for elem in metadata_elem.findall('dc:identifier', ns):
-                # No lxml, atributos com namespace são acessados como {uri}attr
                 scheme = elem.get(f'{{{ns["opf"]}}}scheme')
                 if scheme == 'ISBN':
                     isbn_elem = elem
+                    found_by_scheme = True
                     break
             
+            # 2. Se não achou por scheme, tenta pelo conteúdo (match raw ou urn)
+            if isbn_elem is None:
+                for elem in metadata_elem.findall('dc:identifier', ns):
+                    txt = (elem.text or "").strip()
+                    if txt == raw_isbn or txt == formatted_isbn:
+                        isbn_elem = elem
+                        break
+            
             if isbn_elem is not None:
-                isbn_elem.text = isbn_value
+                # Atualiza conteúdo
+                isbn_elem.text = formatted_isbn
+                
+                # REMOVE atributo opf:scheme se existir, pois causa erro/aviso
+                # validadores preferem apenas urn:isbn: no conteúdo
+                scheme_attr = f'{{{ns["opf"]}}}scheme'
+                if scheme_attr in isbn_elem.attrib:
+                    del isbn_elem.attrib[scheme_attr]
+                    
             else:
                 # Cria novo se não existir
-                new_isbn = ET.SubElement(metadata_elem, f'{{http://purl.org/dc/elements/1.1/}}identifier')
-                # Define o atributo opf:scheme="ISBN" corretamente para lxml
-                new_isbn.set(f'{{http://www.idpf.org/2007/opf}}scheme', 'ISBN')
-                new_isbn.text = isbn_value
+                isbn_elem = ET.SubElement(metadata_elem, f'{{http://purl.org/dc/elements/1.1/}}identifier')
+                isbn_elem.text = formatted_isbn
+                # NÃO adicionamos opf:scheme="ISBN"
+            
+            # Limpeza de meta tags residuais que refinavam este identificador pelo scheme
+            # Ex: <meta refines="#uid" property="opf:scheme">ISBN</meta>
+            ident_id = isbn_elem.get('id')
+            if ident_id:
+                # Encontra todas as metas que referenciam este ID
+                metas_to_remove = []
+                # Busca tanto opf:meta quanto meta (sem namespace) para garantir
+                candidates = []
+                candidates.extend(metadata_elem.findall('opf:meta', ns))
+                candidates.extend(metadata_elem.findall('meta', ns))
+                
+                for meta in candidates:
+                    # Verifica refines
+                    refines = meta.get('refines')
+                    if refines == f'#{ident_id}':
+                        # Verifica se é property="opf:scheme"
+                        prop = meta.get('property')
+                        if prop == 'opf:scheme':
+                            metas_to_remove.append(meta)
+                
+                for meta in metas_to_remove:
+                    # Verifica se o elemento ainda existe antes de remover (pois pode ter duplicatas nas listas)
+                    try:
+                        metadata_elem.remove(meta)
+                    except ValueError:
+                        pass # Já removido
         
         # Salva o arquivo
         with open(opf_path, 'wb') as f:

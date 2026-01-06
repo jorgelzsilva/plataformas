@@ -16,8 +16,8 @@ PLATFORM_MARKS = {
 PLATFORMS = list(PLATFORM_MARKS.keys())
 
 # Padrão de arquivos elegíveis para watermark (terminam com números, não são parte/seção)
-# Exemplo: cap_001.xhtml, cap_002.xhtml, etc.
-ELIGIBLE_FILE_PATTERN = r"cap_\d+\.xhtml$"
+# Exemplo: cap_001.xhtml, cap01.xhtml, 01.xhtml, chapter_1.xhtml, etc.
+ELIGIBLE_FILE_PATTERN = r"^.*?\d+\.xhtml$"
 
 # Arquivos a excluir (partes e seções)
 EXCLUDED_FILE_PATTERNS = [
