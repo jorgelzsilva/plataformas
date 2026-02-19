@@ -153,3 +153,8 @@ output/
 plataformas/
 temp/
 extracted/
+*debug*/
+*.otf
+*.ttf
+*.png
+*.jpg

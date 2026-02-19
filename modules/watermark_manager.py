@@ -31,7 +31,7 @@ def find_eligible_files(oebps_path: str) -> List[str]:
     eligible = []
     oebps = Path(oebps_path)
     
-    for xhtml_file in oebps.glob("*.xhtml"):
+    for xhtml_file in oebps.rglob("*.xhtml"):
         filename = xhtml_file.name
         
         # Verifica se corresponde ao padrão de arquivo elegível

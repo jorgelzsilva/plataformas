@@ -60,7 +60,7 @@ def count_xhtml_characters(oebps_path: str, exclude_marks: bool = True) -> int:
     total = 0
     oebps = Path(oebps_path)
     
-    for xhtml_file in oebps.glob("*.xhtml"):
+    for xhtml_file in oebps.rglob("*.xhtml"):
         with open(xhtml_file, 'r', encoding='utf-8') as f:
             content = f.read()
         total += count_characters(content, exclude_marks)
